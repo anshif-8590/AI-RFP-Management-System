@@ -6,6 +6,8 @@ import deleteRfp from '../../controllers/rfps/delete.js'
 import editRfp from '../../controllers/rfps/edit.js'
 import { convertRfpText } from "../../utils/ai.js"
 import Rfp from "../../models/Rfp.js"
+import Vendor from "../../models/Vendor.js";
+import { sendRfpEmail, buildRfpEmailBody } from "../../utils/email.js";
 
 const router = express.Router()
 
@@ -56,6 +58,83 @@ router.post("/from-text", async (req, res) => {
 })
 
 router.post("/", createRfps)
+
+// SEND RFP TO MULTIPLE VENDORS
+router.post("/:id/send", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { vendorIds } = req.body;
+
+    if (!Array.isArray(vendorIds) || vendorIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "vendorIds must be a non-empty array"
+      });
+    }
+
+    // 1) Find RFP
+    const rfp = await Rfp.findById(id);
+    if (!rfp) return res.status(404).json({ success: false, message: "RFP not found" });
+
+    // 2) Find Vendors
+    const vendors = await Vendor.find({ _id: { $in: vendorIds } });
+    if (vendors.length === 0)
+      return res.status(404).json({ success: false, message: "No valid vendors found" });
+
+    const results = [];
+
+    // 3) Loop + Send Emails
+    for (const vendor of vendors) {
+      const subject = `Request for Proposal – ${rfp.title}`;
+      const text = buildRfpEmailBody({ rfp, vendor });
+
+      try {
+        await sendRfpEmail({
+          to: vendor.email,
+          subject,
+          text
+        });
+
+        // Success
+        results.push({ vendorId: vendor._id, status: "sent" });
+      } catch (err) {
+        console.log("Email failed:", vendor.email, err.message);
+        results.push({
+          vendorId: vendor._id,
+          status: "failed",
+          error: err.message
+        });
+      }
+    }
+
+    // 4) Update RFP.sentTo
+    const now = new Date();
+    const successfulVendorIds = results
+      .filter((r) => r.status === "sent")
+      .map((r) => r.vendorId);
+
+    if (successfulVendorIds.length > 0) {
+      rfp.sentTo.push(
+        ...successfulVendorIds.map((vId) => ({
+          vendorId: vId,
+          sentAt: now
+        }))
+      );
+      await rfp.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Emails processed for ${vendors.length} vendors`,
+      results
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 
 
 
