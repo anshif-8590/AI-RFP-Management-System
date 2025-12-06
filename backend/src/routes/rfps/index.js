@@ -8,6 +8,10 @@ import { convertRfpText } from "../../utils/ai.js"
 import Rfp from "../../models/Rfp.js"
 import Vendor from "../../models/Vendor.js";
 import { sendRfpEmail, buildRfpEmailBody } from "../../utils/email.js";
+import Proposal from '../../models/Proposal.js'
+import { scoreProposals } from "../../utils/scoring.js";
+import { generateRecommendationText } from "../../utils/ai.js";
+
 
 const router = express.Router()
 
@@ -53,7 +57,7 @@ router.post("/from-text", async (req, res) => {
         return res.status(201).json({ success: true, data: created });
 
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 })
 
@@ -131,11 +135,31 @@ router.post("/:id/send", async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
 
+// get compare 
+router.get("/:id/compare" , async ( req , res ) => {
+  try {
+    const { id } = req.params
 
+    const proposals = await Proposal.find({ rfpId : id})
+    .populate("vendorId","name email")
+
+    if (proposals.length === 0) {
+      return res.status(404).json({ message : "No proposals for this RFP "})
+    }
+
+    const scored = scoreProposals(proposals)
+
+    const recommendation = await generateRecommendationText(scored)
+
+    return res.status(200).json({ message : "Success" , recommendation })
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+})
 
 
 export default router

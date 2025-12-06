@@ -8,6 +8,8 @@ dotenv.config();
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const PROMPT_PATH = "./prompts/rfp_from_text.txt";
 const PROPOSAL_PROMPT_PATH = "./prompts/proposal_from_email.txt";
+const RECOMMEND_PROMPT_PATH = "./prompts/recommendation_prompt.txt";
+
 
 
 // ❗ Remove `async` here – it's a normal function
@@ -115,3 +117,31 @@ export async function parseProposalEmail(
 
   return parsed;
 }
+
+export async function generateRecommendationText(scoredProposals) {
+  const prompt = await fs.readFile(RECOMMEND_PROMPT_PATH, "utf8");
+
+  // Build text for GPT using clean scoring data
+  const formatted = scoredProposals.map(p => {
+    return `
+Vendor: ${p.vendor}
+Price: ${p.price}
+Delivery Days: ${p.deliveryDays}
+Warranty: ${p.warranty}
+Payment Terms: ${p.paymentTerms}
+Score: ${p.score}
+`;
+  }).join("\n");
+
+  const userPrompt = `${prompt}\n\n${formatted}`;
+
+  const resp = await client.chat.completions.create({
+    model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+    messages: [{ role: "user", content: userPrompt }],
+    temperature: 0.0,
+    max_tokens: 250
+  });
+
+  return resp.choices?.[0]?.message?.content || "No recommendation available.";
+}
+
