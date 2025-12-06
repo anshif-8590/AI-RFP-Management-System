@@ -7,7 +7,8 @@ const getRfpsId = async ( req , res ) => {
     try {
         const { id } = req.params
         const rfp = await Rfp.find({ _id : id })
-        if (!rfp) {
+        console.log(rfp.length)
+        if ( rfp.length === 0) {
             return res.status(404).json({ message : "RFP not found "})
         }
         res.status(500).json({ message : "Success" , rfp })

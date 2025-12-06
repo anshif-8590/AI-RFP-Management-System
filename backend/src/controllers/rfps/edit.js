@@ -10,7 +10,7 @@ const editRfp = async ( req , res ) => {
         if (!updatedRfp) {
            return res.status(404).json({ message : "RFP not found "})
         }
-        res.status(200).json({ message : "Success" , updatedRfp })
+        res.status(200).json({ message : "RFP edited successfully " , updatedRfp })
     } catch (error) {
          res.status(500).json({ message: error.message });
         
