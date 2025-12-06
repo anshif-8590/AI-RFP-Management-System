@@ -1,12 +1,13 @@
 import express from 'express'
 import getRfps from '../../controllers/rfps/get.js'
 import createRfps from '../../controllers/rfps/create.js'
+import getRfpsId from '../../controllers/rfps/getId.js'
 
 const router = express.Router()
 
 router.get ("/get", getRfps)
 router.post ("/create", createRfps)
-router.get ("/get/:id", )
+router.get ("/get/:id", getRfpsId)
 
 
 export default router
