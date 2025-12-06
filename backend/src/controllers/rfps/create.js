@@ -5,7 +5,7 @@ import Rfp from "../../models/Rfp.js"
 
 
 const createRfps = async ( req , res ) => {
-    console.log(req.body)
+
     const { title , description , budget , items , deliveryDate , paymentTerms } = req.body 
     
     if ( !title || !description ) {
