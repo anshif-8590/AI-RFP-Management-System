@@ -7,6 +7,8 @@ dotenv.config();
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const PROMPT_PATH = "./prompts/rfp_from_text.txt";
+const PROPOSAL_PROMPT_PATH = "./prompts/proposal_from_email.txt";
+
 
 // ❗ Remove `async` here – it's a normal function
 function extractJson(text) {
@@ -73,4 +75,43 @@ export async function convertRfpText(
   throw new Error(
     `Failed to convert text after retries: ${lastErr?.message || lastErr}`
   );
+}
+
+export async function parseProposalEmail(
+  rawEmail,
+  { model = process.env.OPENAI_MODEL || "gpt-3.5-turbo" } = {}
+) {
+  const basePrompt = await fs.readFile(PROPOSAL_PROMPT_PATH, "utf8");
+  const userPrompt = `${basePrompt}\n\nVENDOR_EMAIL:\n${rawEmail}`;
+
+  const resp = await client.chat.completions.create({
+    model,
+    messages: [{ role: "user", content: userPrompt }],
+    temperature: 0.0,
+    max_tokens: 400
+  });
+
+  const content = resp.choices?.[0]?.message?.content;
+  if (!content) throw new Error("Empty response in proposal parsing");
+
+  const jsonText = extractJson(content);
+  const parsed = JSON.parse(jsonText);
+
+  // Normalize fields
+  if (parsed.price !== null && parsed.price !== undefined) {
+    const n = Number(String(parsed.price).replace(/[^0-9.]/g, ""));
+    parsed.price = Number.isFinite(n) ? n : null;
+  } else parsed.price = null;
+
+  if (parsed.deliveryDays !== null && parsed.deliveryDays !== undefined) {
+    const d = parseInt(parsed.deliveryDays, 10);
+    parsed.deliveryDays = Number.isFinite(d) ? d : null;
+  } else parsed.deliveryDays = null;
+
+  parsed.currency = parsed.currency || null;
+  parsed.warranty = parsed.warranty || null;
+  parsed.paymentTerms = parsed.paymentTerms || null;
+  parsed.notes = parsed.notes || null;
+
+  return parsed;
 }
