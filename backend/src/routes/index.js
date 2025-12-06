@@ -15,4 +15,3 @@ router.use("/vendors",vendorRoutes)
 router.use("/proposals",ProposalsRoute)
 
 export default router;
-// http://localhost:3004/api/rfps/6934618b8ef5dccdf490f5d9/send

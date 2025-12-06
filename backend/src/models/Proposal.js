@@ -22,24 +22,33 @@ const proposalSchema = new mongoose.Schema(
         price: {
             type: Number
         },
+        terms: {
+            type: String
+        },
         attachments: [
             {
                 fileName: String,
                 fileUrl: String
             }
         ],
-        score : {
-            type : Number 
+        score: {
+            type: Number
+        },
+        fromEmail: {
+            type: String
+        },
+        subject: {
+            type: String
         }
 
 
     },
     {
-        timestamps : true 
+        timestamps: true
     }
 )
 
-proposalSchema.index ({ rfpId : 1 })
+proposalSchema.index({ rfpId: 1 })
 
-const Proposal = mongoose.model( "Proposal" , proposalSchema )
+const Proposal = mongoose.model("Proposal", proposalSchema)
 export default Proposal 
