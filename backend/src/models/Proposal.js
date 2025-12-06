@@ -17,7 +17,7 @@ const proposalSchema = new mongoose.Schema(
             required: true
         },
         parseFields: {
-            type: object
+            type: Object
         },
         price: {
             type: Number
