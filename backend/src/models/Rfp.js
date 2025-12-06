@@ -13,7 +13,7 @@ const rfpSchema = new mongoose.Schema(
         budget : {
             type : Number 
         },
-        itmes : [
+        items : [
             {
                 type : String 
             }
