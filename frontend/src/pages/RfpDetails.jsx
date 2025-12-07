@@ -37,7 +37,7 @@ const RfpDetails = () => {
         try {
             const res = await api.get(`/proposals/rfp/${id}`);
             // backend: { message: "Success", proposal: [...] }
-            setProposals(res.data.proposal );
+            setProposals(res.data.proposal);
         } catch (err) {
             console.error(err);
         }
@@ -95,8 +95,8 @@ const RfpDetails = () => {
     }
 
     if (!rfp) {
-  return <p className="text-sm text-red-600">Failed to load RFP.</p>;
-}
+        return <p className="text-sm text-red-600">Failed to load RFP.</p>;
+    }
     return (
         <>
             <div className="space-y-6">
@@ -145,8 +145,8 @@ const RfpDetails = () => {
                                 type="button"
                                 onClick={() => toggleVendor(v._id)}
                                 className={`px-3 py-1.5 rounded-full text-xs border ${selectedVendors.includes(v._id)
-                                        ? "bg-slate-900 text-white border-slate-900"
-                                        : "bg-slate-50 text-slate-700 border-slate-200"
+                                    ? "bg-slate-900 text-white border-slate-900"
+                                    : "bg-slate-50 text-slate-700 border-slate-200"
                                     }`}
                             >
                                 {v.name}
@@ -154,6 +154,86 @@ const RfpDetails = () => {
                         ))}
                     </div>
                 </div>
+
+                {/* ADD PROPOSAL FORM */}
+                <div className="bg-white rounded-xl shadow p-4 space-y-3">
+                    <h3 className="font-medium text-sm">Add Proposal (Paste Vendor Email)</h3>
+
+                    <div className="grid grid-cols-1 gap-3">
+                        {/* Vendor dropdown */}
+                        <select
+                            className="border rounded-lg px-3 py-2 text-sm"
+                            value={selectedVendors[0] || ""}
+                            onChange={(e) => setSelectedVendors([e.target.value])}
+                        >
+                            <option value="">Select Vendor</option>
+                            {vendors.map((vendor) => (
+                                <option key={vendor._id} value={vendor._id}>
+                                    {vendor.name}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Subject */}
+                        <input
+                            type="text"
+                            placeholder="Email Subject"
+                            id="proposal-subject"
+                            className="border rounded-lg px-3 py-2 text-sm"
+                        />
+
+                        {/* From Email */}
+                        <input
+                            type="text"
+                            placeholder="Vendor Email (From)"
+                            id="proposal-from"
+                            className="border rounded-lg px-3 py-2 text-sm"
+                        />
+
+                        {/* Raw Email Text */}
+                        <textarea
+                            id="proposal-text"
+                            rows={5}
+                            placeholder="Paste the vendor email content here..."
+                            className="border rounded-lg px-3 py-2 text-sm"
+                        ></textarea>
+
+                        {/* Submit button */}
+                        <button
+                            onClick={async () => {
+                                const vendorId = selectedVendors[0];
+                                const subject = document.getElementById("proposal-subject").value;
+                                const fromEmail = document.getElementById("proposal-from").value;
+                                const rawEmail = document.getElementById("proposal-text").value;
+
+                                if (!vendorId || !rawEmail) {
+                                    alert("Vendor and email content are required.");
+                                    return;
+                                }
+
+                                try {
+                                    await api.post("/proposals/manual", {
+                                        rfpId: id,
+                                        vendorId,
+                                        rawEmail,
+                                        subject,
+                                        fromEmail,
+                                    });
+
+                                    alert("Proposal added!");
+                                    await fetchProposals(); // refresh proposals list
+                                } catch (err) {
+                                    console.error("Add proposal error:", err);
+                                    alert("Failed to add proposal");
+                                }
+                            }}
+                            className="bg-slate-900 text-white px-3 py-2 rounded-lg text-sm"
+                        >
+                            Add Proposal
+                        </button>
+                    </div>
+                </div>
+
 
                 {/* PROPOSALS LIST + COMPARE */}
                 <div className="bg-white rounded-xl shadow p-4 space-y-3">
