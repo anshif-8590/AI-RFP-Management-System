@@ -2,6 +2,8 @@ import express from 'express';
 import RfpsRoutes from './rfps/index.js'
 import vendorRoutes from "./vendor/index.js"
 import ProposalsRoute from "./proposal/index.js"
+import emailRoutes from "./emailRoutes.js";
+
 
 const router = express.Router();
 
@@ -13,5 +15,7 @@ router.get('/health', (req, res) => {
 router.use('/rfps',RfpsRoutes)
 router.use("/vendors",vendorRoutes)
 router.use("/proposals",ProposalsRoute)
+router.use("/email", emailRoutes)
+
 
 export default router;

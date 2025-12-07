@@ -98,7 +98,8 @@ router.post("/:id/send", async (req, res) => {
 
     // 3) Loop + Send Emails
     for (const vendor of vendors) {
-      const subject = `Request for Proposal – ${rfp.title}`;
+      // const subject = `Request for Proposal – ${rfp.title}`;
+      const subject = `[RFP:${rfp._id}] Request for Proposal – ${rfp.title}`;
       const text = buildRfpEmailBody({ rfp, vendor });
 
       try {
