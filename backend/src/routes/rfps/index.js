@@ -22,43 +22,50 @@ router.delete("/:id", deleteRfp)
 
 
 router.post("/from-text", async (req, res) => {
-    try {
-        const { text } = req.body;
-        if (!text || typeof text !== "string") {
-            return res.status(400).json({ success: false, message: "text (string) is required in body" });
-        }
+  try {
+    const { text } = req.body;
+    console.log("POST /rfps/from-text called");
+    console.log("Raw text snippet:", (text || "").slice(0, 80));
 
-        const structured = await convertRfpText(text);
-
-        let title = structured?.title;
-
-        // fallback base text for title: model description OR original text
-        const baseForTitle = structured?.description || text;
-
-        if (!title && typeof baseForTitle === "string") {
-            title = baseForTitle.split(".")[0].slice(0, 60);
-        }
-
-        if (!title) title = "Untitled RFP";
-
-
-        const rfpData = {
-            title,
-            description: structured.description || text,
-            budget: structured.budget ?? null,
-            items: structured.requirements || [],
-            deliveryDate: structured.deadline ? new Date(structured.deadline) : null,
-            paymentTerms: null,
-            category: structured.category || null,
-            contactPerson: structured.contactPerson || { name: null, email: null }
-        };
-
-        const created = await Rfp.create(rfpData);
-        return res.status(201).json({ success: true, data: created });
-
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+    if (!text || typeof text !== "string") {
+      return res.status(400).json({ success: false, message: "text (string) is required in body" });
     }
+
+    const structured = await convertRfpText(text);
+
+    let title = structured?.title;
+
+    // fallback base text for title: model description OR original text
+    const baseForTitle = structured?.description || text;
+
+    if (!title && typeof baseForTitle === "string") {
+      title = baseForTitle.split(".")[0].slice(0, 60);
+    }
+
+    if (!title) title = "Untitled RFP";
+
+
+    const rfpData = {
+      title,
+      description: structured.description || text,
+      budget: structured.budget ?? null,
+      items: structured.requirements || [],
+      deliveryDate: structured.deadline ? new Date(structured.deadline) : null,
+      paymentTerms: null,
+      category: structured.category || null,
+      contactPerson: structured.contactPerson || { name: null, email: null }
+    };
+
+
+    const created = await Rfp.create(rfpData);
+    console.log("RFP created from text with id:", created._id);
+
+    return res.status(201).json({ success: true, data: created });
+
+  } catch (error) {
+    console.error("POST /rfps/from-text error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
 })
 
 router.post("/", createRfps)
@@ -68,6 +75,8 @@ router.post("/:id/send", async (req, res) => {
   try {
     const { id } = req.params;
     const { vendorIds } = req.body;
+
+    console.log("POST /rfps/:id/send called for id:", id, "vendorIds:", vendorIds);
 
     if (!Array.isArray(vendorIds) || vendorIds.length === 0) {
       return res.status(400).json({
@@ -137,28 +146,37 @@ router.post("/:id/send", async (req, res) => {
     });
 
   } catch (error) {
+    console.error("POST /rfps/:id/send error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 });
 
 // get compare 
-router.get("/:id/compare" , async ( req , res ) => {
+router.get("/:id/compare", async (req, res) => {
   try {
     const { id } = req.params
+    console.log("GET /rfps/:id/compare called for RFP:", id);
 
-    const proposals = await Proposal.find({ rfpId : id})
-    .populate("vendorId","name email")
+    const proposals = await Proposal.find({ rfpId: id })
+      .populate("vendorId", "name email")
+
+    console.log("Found proposals:", proposals.length);
 
     if (proposals.length === 0) {
-      return res.status(404).json({ message : "No proposals for this RFP "})
+      return res.status(404).json({ message: "No proposals for this RFP " })
     }
 
     const scored = scoreProposals(proposals)
+    console.log("Scored proposals:", scored.map(p => ({
+      id: p._id,
+      score: p.score
+    })));
 
     const recommendation = await generateRecommendationText(scored)
 
-    return res.status(200).json({ message : "Success" , recommendation })
+    return res.status(200).json({ message: "Success", recommendation })
   } catch (error) {
+    console.error("GET /rfps/:id/compare error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 })

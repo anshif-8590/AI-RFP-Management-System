@@ -22,6 +22,8 @@ const RfpDetails = () => {
     const [recommendation, setRecommendation] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [compareError, setCompareError] = useState("");
+
 
 
     // ---- API calls ----
@@ -29,11 +31,11 @@ const RfpDetails = () => {
         try {
             const res = await api.get(`/rfps/${id}`);
             setRfp(res.data.rfp);
-             setError(""); 
+            setError("");
         } catch (err) {
             console.error(err);
             setError("Failed to load RFP");
-    setRfp(null);
+            setRfp(null);
         }
     };
 
@@ -95,25 +97,26 @@ const RfpDetails = () => {
 
     const handleCompare = async () => {
         try {
+            setCompareError("");
             const res = await api.get(`/rfps/${id}/compare`);
             setRecommendation(res.data.recommendation || "");
         } catch (err) {
             console.error(err);
-            alert("Failed to get recommendation");
+            setCompareError("Failed to get recommendation. Please try again.");
         }
     };
 
     if (loading) {
-  return <p className="text-sm text-slate-500">Loading...</p>;
-}
+        return <p className="text-sm text-slate-500">Loading...</p>;
+    }
 
-if (error) {
-  return <p className="text-sm text-red-600">{error}</p>;
-}
+    if (error) {
+        return <p className="text-sm text-red-600">{error}</p>;
+    }
 
-if (!rfp) {
-  return <p className="text-sm text-red-600">RFP not found.</p>;
-}
+    if (!rfp) {
+        return <p className="text-sm text-red-600">RFP not found.</p>;
+    }
 
 
     return (
@@ -307,6 +310,10 @@ if (!rfp) {
                             Compare & Get Recommendation
                         </button>
                     </div>
+                    {compareError && (
+                        <p className="text-xs text-red-600 mt-1">{compareError}</p>
+                    )}
+
 
                     {proposals.length === 0 ? (
                         <p className="text-sm text-slate-500">
