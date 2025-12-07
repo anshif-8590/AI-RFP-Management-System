@@ -1,0 +1,34 @@
+We need a company to develop a web-based Inventory Management System for our retail business.
+The system should include product management, stock tracking, barcode scanning, low-stock alerts, user roles, and a basic dashboard.
+The estimated budget for this project is around ₹2,50,000.
+We expect the final delivery within 30–40 days.
+Please include any maintenance or warranty period in your proposal.
+Contact person: Arun Kumar (arun@retailcorp.com
+)
+
+
+
+Subject: Proposal for Inventory Management System
+From Email: sales@techwave.com
+
+Raw Email Text (Paste This):
+Hello Team,
+We reviewed your requirements for the Inventory Management System.
+Our proposal includes product management, barcode scanning, low-stock alerts, user roles, and a central dashboard.
+We can deliver the full system in 35 days at a total cost of ₹2,30,000.
+We also provide 1 year of free maintenance.
+Let us know if you need further clarifications.
+Regards,
+TechWave Solutions
+
+
+Subject: IMS Project Proposal
+From Email: info@brightsoft.com
+
+Raw Email Text (Paste This):
+Dear Client,
+Based on your RFP, we can build the required Inventory Management System with all the listed modules.
+Our delivery timeline is 40 days, and our quoted price is ₹2,50,000.
+We offer 6 months warranty for bug fixes and support.
+Thank you,
+BrightSoft Technologies

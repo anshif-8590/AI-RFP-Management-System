@@ -338,22 +338,24 @@ const RfpDetails = () => {
                                             {p.rawEmail}
                                         </p>
                                     </div>
-                                    <div className="text-right text-xs text-slate-600 min-w-[90px]">
-                                        <p>Price: {p.price ? `₹${p.price}` : "-"}</p>
-                                        <p>
-                                            Delivery:{" "}
-                                            {p.parsedFields?.deliveryDays ||
-                                                p.parseFields?.deliveryDays ||
-                                                "-"}{" "}
-                                            days
-                                        </p>
-                                        <p>
-                                            Warranty:{" "}
-                                            {p.parsedFields?.warranty ||
-                                                p.parseFields?.warranty ||
-                                                "-"}
-                                        </p>
+                                    <div className="text-right text-xs text-slate-600 min-w-[110px]">
+                                        {(() => {
+                                            const fields = p.parseFields || p.parsedFields || {};
+
+                                            const price = fields.price ?? p.price ?? null;
+                                            const delivery = fields.deliveryDays ?? null;
+                                            const warranty = fields.warranty ?? null;
+
+                                            return (
+                                                <>
+                                                    <p>Price: {price ? `₹${price}` : "-"}</p>
+                                                    <p>Delivery: {delivery ?? "-"} days</p>
+                                                    <p>Warranty: {warranty || "-"}</p>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
+
                                 </div>
                             ))}
                         </div>
