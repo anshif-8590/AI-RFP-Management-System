@@ -4,7 +4,7 @@ import deleteProposal from '../../controllers/proposal/delete.js'
 import getAllProposal from '../../controllers/proposal/get.js'
 import getProposalById from '../../controllers/proposal/getId.js'
 import Proposal from "../../models/Proposal.js";
-import { parseProposalEmail } from '../../utils/ai.js'
+import { parseProposalEmail } from "../../utils/ai.js";
 
 
 const router = express.Router()
@@ -16,24 +16,46 @@ router.delete("/:id", deleteProposal)
 
 // manual creation of proposal by pasting vendor reply
 router.post("/manual", async (req, res) => {
-    try {
-        const { rfpId, vendorId, rawEmail, fromEmail, subject } = req.body
-        if (!rfpId || !vendorId || !rawEmail) {
-            return res.status(400).json({ message: "RFP , vendor and email required " })
-        }
+  try {
+    const { rfpId, vendorId, rawEmail, fromEmail, subject } = req.body;
 
-        const proposal = await Proposal.create({
-            rfpId,
-            vendorId,
-            rawEmail,
-            fromEmail: fromEmail || null,
-            subject: subject || null
-        })
-        return res.status(201).json({ message: "Success", proposal })
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+    if (!rfpId || !vendorId || !rawEmail) {
+      return res
+        .status(400)
+        .json({ message: "RFP, vendor and email required" });
     }
-})
+
+    // 🔹 1) Call OpenAI to parse the email
+    const parsed = await parseProposalEmail(rawEmail);
+    // parsed = { price, deliveryDays, warranty, paymentTerms, notes }
+
+    // 🔹 2) Save both top-level `price` and nested `parseFields`
+    const proposal = await Proposal.create({
+      rfpId,
+      vendorId,
+      rawEmail,
+      fromEmail: fromEmail || null,
+      subject: subject || null,
+
+      price: parsed.price ?? null,
+      terms: parsed.paymentTerms ?? null,
+
+      parseFields: {
+        price: parsed.price ?? null,
+        deliveryDays: parsed.deliveryDays ?? null,
+        warranty: parsed.warranty ?? null,
+        paymentTerms: parsed.paymentTerms ?? null,
+        notes: parsed.notes ?? null
+      }
+    });
+
+    return res.status(201).json({ message: "Success", proposal });
+  } catch (error) {
+    console.error("manual proposal error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // get the proposal by rfpId 
 router.get("/rfp/:rfpId", async ( req , res ) => {
     try {
