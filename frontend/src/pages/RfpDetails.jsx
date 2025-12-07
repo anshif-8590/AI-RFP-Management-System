@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
 
+const formatDate = (value) => {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleString();
+};
+
+
 const RfpDetails = () => {
     const { id } = useParams();
 
@@ -13,14 +21,19 @@ const RfpDetails = () => {
     const [sending, setSending] = useState(false);
     const [recommendation, setRecommendation] = useState("");
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
 
     // ---- API calls ----
     const fetchRfp = async () => {
         try {
             const res = await api.get(`/rfps/${id}`);
             setRfp(res.data.rfp);
+             setError(""); 
         } catch (err) {
             console.error(err);
+            setError("Failed to load RFP");
+    setRfp(null);
         }
     };
 
@@ -90,13 +103,19 @@ const RfpDetails = () => {
         }
     };
 
-    if (loading || !rfp) {
-        return <p className="text-sm text-slate-500">Loading...</p>;
-    }
+    if (loading) {
+  return <p className="text-sm text-slate-500">Loading...</p>;
+}
 
-    if (!rfp) {
-        return <p className="text-sm text-red-600">Failed to load RFP.</p>;
-    }
+if (error) {
+  return <p className="text-sm text-red-600">{error}</p>;
+}
+
+if (!rfp) {
+  return <p className="text-sm text-red-600">RFP not found.</p>;
+}
+
+
     return (
         <>
             <div className="space-y-6">
@@ -118,6 +137,47 @@ const RfpDetails = () => {
                         </span>
                     </div>
                 </div>
+                {/* ALREADY SENT TO */}
+                <div className="bg-white rounded-xl shadow p-4 space-y-2">
+                    <h3 className="font-medium text-sm">Already Sent To</h3>
+
+                    {Array.isArray(rfp.sentTo) && rfp.sentTo.length > 0 ? (
+                        <div className="space-y-2 text-sm">
+                            {rfp.sentTo.map((entry) => {
+                                // find vendor from vendors list using vendorId
+                                const vendor = vendors.find(
+                                    (v) => String(v._id) === String(entry.vendorId)
+                                );
+
+                                const name = vendor ? vendor.name : String(entry.vendorId);
+                                const email = vendor ? vendor.email : "";
+
+                                return (
+                                    <div
+                                        key={entry._id || `${entry.vendorId}-${entry.sentAt}`}
+                                        className="flex items-center justify-between border rounded-lg px-3 py-2"
+                                    >
+                                        <div>
+                                            <p className="font-medium">{name}</p>
+                                            {email && (
+                                                <p className="text-xs text-slate-500">{email}</p>
+                                            )}
+                                        </div>
+                                        <div className="text-right text-xs text-slate-600">
+                                            <p>Status: sent</p>
+                                            <p>Sent: {formatDate(entry.sentAt)}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-slate-500">
+                            RFP not sent to any vendors yet.
+                        </p>
+                    )}
+                </div>
+
 
                 {/* SEND RFP TO VENDORS */}
                 <div className="bg-white rounded-xl shadow p-4 space-y-3">

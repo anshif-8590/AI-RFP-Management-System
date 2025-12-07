@@ -56,7 +56,7 @@ router.post("/from-text", async (req, res) => {
         const created = await Rfp.create(rfpData);
         return res.status(201).json({ success: true, data: created });
 
-    } catch (err) {
+    } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
 })
@@ -101,12 +101,12 @@ router.post("/:id/send", async (req, res) => {
 
         // Success
         results.push({ vendorId: vendor._id, status: "sent" });
-      } catch (err) {
-        console.log("Email failed:", vendor.email, err.message);
+      } catch (error) {
+        console.log("Email failed:", vendor.email, error.message);
         results.push({
           vendorId: vendor._id,
           status: "failed",
-          error: err.message
+          error: error.message
         });
       }
     }
@@ -122,6 +122,8 @@ router.post("/:id/send", async (req, res) => {
         ...successfulVendorIds.map((vId) => ({
           vendorId: vId,
           sentAt: now
+          // date: now,      // <-- changed
+          // status: "sent"  // <-- added
         }))
       );
       await rfp.save();
@@ -130,11 +132,11 @@ router.post("/:id/send", async (req, res) => {
     return res.status(200).json({
       success: true,
       message: `Emails processed for ${vendors.length} vendors`,
+      //  sentTo: rfp.sentTo,   // <-- added
       results
     });
 
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 });
